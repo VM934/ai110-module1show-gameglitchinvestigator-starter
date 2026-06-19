@@ -1,51 +1,59 @@
-# 💭 Reflection: Game Glitch Investigator
-
-Answer each question in 3 to 5 sentences. Be specific and honest about what actually happened while you worked. This is about your process, not trying to sound perfect.
+# Reflection: Game Glitch Investigator
 
 ## 1. What was broken when you started?
 
-- What did the game look like the first time you ran it?
-- List at least two concrete bugs you noticed at the start  
-  (for example: "the hints were backwards").
+The first version looked like a working guessing game, but several parts of its
+behavior were unreliable. The higher and lower messages were reversed, invalid
+input consumed attempts, and starting a new game did not fully reset the game.
+The UI also displayed a hard-coded range that could disagree with the selected
+difficulty. The biggest warning sign was that the app could run while still
+behaving incorrectly.
 
 **Bug Reproduction Log**
 
-Document at least 3 bugs you found. Add rows as needed.
-
-| Input | Expected Behavior | Actual Behavior | Console Output / Error |
-|-------|-------------------|-----------------|------------------------|
-| | | | |
-| | | | |
-| | | | |
-
----
+| Input / Action | Expected Behavior | Actual Starter Behavior | Console Output / Error |
+|---|---|---|---|
+| Guess `60` when secret is `50` | Report `Too High` and tell player to go lower | Reported `Too High` but displayed `Go HIGHER!` | No console error |
+| Submit blank input | Show validation error without using an attempt | Increased attempts and stored invalid input in history | `Enter a guess.` |
+| Select New Game after a loss | Reset the entire game | Changed the secret, but preserved lost status, score, and history | App immediately stopped on the old status |
+| Run provided tests | Game logic tests should pass | `check_guess` was not implemented in `logic_utils.py` | 3 `NotImplementedError` failures |
 
 ## 2. How did you use AI as a teammate?
 
-- Which AI tools did you use on this project (for example: ChatGPT, Gemini, Copilot)?
-- Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
-- Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
-
----
+I used an AI coding assistant as a teammate to audit the starter code,
+identify inconsistent behavior, propose a refactor, and generate additional
+tests. A useful suggestion was separating player-facing hint messages from
+`check_guess`, which made the provided test contract clear and easy to verify.
+I verified that suggestion by running pytest and manually checking the live
+app. I did not accept every behavior in the AI-generated starter, such as
+truncating decimal input or rewarding some incorrect guesses, because targeted
+tests showed those choices were confusing.
 
 ## 3. Debugging and testing your fixes
 
-- How did you decide whether a bug was really fixed?
-- Describe at least one test you ran (manual or using pytest)  
-  and what it showed you about your code.
-- Did AI help you design or understand any tests? How?
-
----
+I treated a bug as fixed only when both the relevant automated test passed and
+the live Streamlit behavior matched the expected result. I expanded the three
+provided comparison tests into a 25-test suite covering difficulty ranges,
+input parsing, hint direction, scoring, and complete app interactions. I also
+compiled the Python files and manually exercised the running app. AI helped
+propose edge cases, but the tests and live behavior were the evidence used to
+accept or reject each change.
 
 ## 4. What did you learn about Streamlit and state?
 
-- How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
-
----
+Streamlit reruns the script from top to bottom after a user interacts with a
+widget. Normal Python variables can therefore be recreated on every rerun,
+while `st.session_state` keeps values such as the secret number, score, status,
+and history between interactions. A reliable reset has to update every related
+session-state value, not only the secret number. I also learned that changing a
+difficulty setting should intentionally start a fresh game so old state cannot
+conflict with the new range.
 
 ## 5. Looking ahead: your developer habits
 
-- What is one habit or strategy from this project that you want to reuse in future labs or projects?
-  - This could be a testing habit, a prompting strategy, or a way you used Git.
-- What is one thing you would do differently next time you work with AI on a coding task?
-- In one or two sentences, describe how this project changed the way you think about AI generated code.
+I want to keep using small pure functions and targeted tests before changing a
+larger user interface. Next time I work with AI-generated code, I will define
+the expected behavior first and ask for tests that can disprove the proposed
+solution. This project reinforced that AI-generated code can look polished and
+still contain contradictory logic. I should treat AI as a collaborator whose
+work needs evidence-based review, not as an authority.
